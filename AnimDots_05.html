@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>A StarDust Animation by daDatenBerger</title>
+    <!--<script type="text/javascript" src="//stardustjs.github.io/stardust/v0.1.1/stardust.bundle.min.js"></script>-->
+    <script type="text/javascript" src="locScripts/stardust.bundle.js"></script>
+    <style type="text/css">
+        #main-canvas { margin: 0; padding: 0; position: absolute; left: 0; top: 0 }
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: black;
+            shape-rendering: crispEdges;
+        }
+    </style>
+    <script>
+        //Prepare for animation loop
+        var myTime = 0;
+        var myTimeDel = 0;
+        var myTimeNow = 0;
+        var myTimePrev = 0;
+        var myFrameCount = 0;
+
+        // Get our canvas element
+        var canvas;
+        var canWidth = 1000; //1250;
+        var canHeight = 500; //680;
+        var baseData = [];
+        var dataL = 0;
+
+        var platform;
+        var marks;
+
+        var timeText;
+        var dataPntsText;
+
+        var myOpacity = 1;
+        let starDustColor0 = [ 0, 0.8, 0, myOpacity ];
+        let starDustColor1 = [ 0, 0.5, 0, myOpacity ];
+        let starDustColor2 = [ 1, 1, 1, 1 ];
+        let starDustColors = [starDustColor0, starDustColor1, starDustColor2];
+
+        let dots_A = [{x:1,y:10},{x:1.5,y:9},{x:2,y:8},{x:2.5,y:7},{x:3,y:6},{x:3.5,y:5},{x:4,y:4},{x:4.5,y:4},{x:5,y:5},{x:5.5,y:6},{x:6,y:7},{x:6.5,y:8},{x:7,y:9},{x:7.5,y:10},{x:3.5,y:8},{x:4,y:8},{x:4.5,y:8},{x:5,y:8}]
+        // Create a WebGL 2D platform on the canvas:
+        function init(){
+            timeText = document.getElementById('TimeText');
+            dataPntsText = document.getElementById('DataPntsText');
+            canvas = document.getElementById("main-canvas");
+            canvas.setAttribute("style", "background-color : #090909");
+            platform = Stardust.platform("webgl-2d", canvas, canWidth, canHeight);
+
+            var floHex = Stardust.mark.compile(`
+                mark Hex(
+                center: Vector2,
+                radius: float,
+                color: Color = [ 0, 0, 0, 1 ],
+                intTime: float
+                ) {
+                    let intRadius = radius * (0.75 + sin(0.5*intTime*PI)*sin(0.5*intTime*PI));
+                    let intRot = intTime;
+                    let movedCenter = Vector2(100 * sin(0.4*intTime * PI) + 10*intTime, 10 * cos(0.1*intTime * PI)+ 10*intTime) + center;
+                    for(i in 0..5) {
+                        let a1 = (i + intRot) / 6.0 * PI * 2.0;
+                        let a2 = (i + 1 + intRot) / 6.0 * PI * 2.0;
+                        let p1 = Vector2(intRadius * cos(a1), intRadius * sin(a1));
+                        let p2 = Vector2(intRadius * cos(a2), intRadius * sin(a2));
+                        emit [
+                            { position: movedCenter + p1, color: color },
+                                { position: movedCenter, color: color },
+                                { position: movedCenter + p2, color: color }
+                                ];
+                    }
+                }`);
+
+            marks = Stardust.mark.create(floHex.Hex, platform);
+            marks.attr("center", (d) => [ d.x, d.y]);
+            marks.attr("radius", 5);
+            marks.attr("color", starDustColors[0]);
+            marks.attr("intTime", 0);
+            createBaseData();
+        }
+
+        // ... Load data and render your visualization
+        function createBaseData(){
+            let curX = 100.0;
+            let curY = 300.0;
+            let xOffset = 1;
+            let yOffset = 1;
+            let scale = 2;
+            for (let j=0;j < 1500;j++) {
+                for (let i = 0; i < dots_A.length; i++) {
+                    baseData.push({x:scale*dots_A[i].x + j * xOffset +curX, y:scale*dots_A[i].y + j * yOffset});
+                }
+            }
+                    // console.log(data);
+            dataL = baseData.length;
+            console.log("Nr of datapoints: ", dataL);
+            dataPntsText.innerHTML = "Nr of data points: " + dataL.toString();
+
+                    // console.log(dataToBind);
+                    // calcScaledData(1);
+
+            marks.data(baseData);
+            marks.render();
+            myTimeNow = Date.now();
+            // animate();
+                          requestAnimationFrame( animate );
+        }
+
+        function renderTimed(){
+            updateMyTime();
+            var dT = 0.0;
+            var p = window.performance;
+            var t0 = p.now();
+            marks.attr("intTime", myTime);
+            marks.render();
+            var t1 = p.now();
+            dT = t1 - t0;
+            if (dT > 1.0){
+                console.log(myFrameCount, ": ", dT);
+            }
+        }
+
+
+        function updateMyTime() {
+            myFrameCount += 1;
+            myTimePrev = myTimeNow;
+            myTimeNow = Date.now();
+            myTimeDel = (myTimeNow - myTimePrev)*0.001; //in sec
+            if (myTimeDel > 0.019){
+                console.log("in updateMyTime: " , myFrameCount, ": ", myTimeDel);
+            }
+            myTime += myTimeDel;	// in sec
+            timeText.innerHTML = "Time: " + myTime.toFixed(2) + " | Anim-Frame: " + myFrameCount;
+        }
+
+        function animate() {
+            if (myTime < 6){
+                // updateRays();
+                // updateRaysTimed();
+                renderTimed();
+               requestAnimationFrame( animate );
+            }
+        }
+    </script>
+
+</head>
+<body>
+<!--<script src="//d3js.org/d3.v3.min.js" type="text/javascript"></script>-->
+<div  id="DataPntsText">Null data points:</div>
+<div  id="TimeText">Null</div>
+<form style="position:relative">
+    <canvas id="main-canvas"></canvas>
+</form>
+<script>
+    init();
+</script>
+</body>
+</html>
