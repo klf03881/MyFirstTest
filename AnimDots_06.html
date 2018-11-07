@@ -41,10 +41,10 @@
         let starDustColor2 = [ 1, 1, 1, 1 ];
         let starDustColors = [starDustColor0, starDustColor1, starDustColor2];
 
-        let dots_A = [{x:1,y:10},{x:1.5,y:9},{x:2,y:8},{x:2.5,y:7},{x:3,y:6},{x:3.5,y:5},{x:4,y:4},{x:4.5,y:4},{x:5,y:5},{x:5.5,y:6},{x:6,y:7},{x:6.5,y:8},{x:7,y:9},{x:7.5,y:10},{x:2.9,y:8},{x:3.8,y:8},{x:4.7,y:8},{x:5.6,y:8},{delX:10,delY:0}]
-        let dots_B = [{x:1,y:10},{x:1,y:9},{x:1,y:8},{x:1,y:7},{x:1,y:6},{x:1,y:5},{x:1,y:4},{x:2,y:4},{x:3,y:4},{x:3.5,y:5},{x:3.5,y:6},{x:2,y:7},{x:3,y:7},{x:3.5,y:8},{x:3.5,y:9},{x:2,y:10},{x:3,y:10},{x:3.5,y:8},{delX:10,delY:0}]
-        let dots_C = [{x:1,y:7},{x:1.25,y:6},{x:1.25,y:8},{x:1.75,y:5},{x:1.75,y:9},{x:2.5,y:4.25},{x:2.5,y:9.75},{x:3.5,y:4},{x:3.5,y:10},{x:4.5,y:4.2},{x:4.5,y:9.8},{delX:10,delY:0}]
-        let dots_D = [{x:1,y:10},{x:1,y:9},{x:1,y:8},{x:1,y:7},{x:1,y:6},{x:1,y:5},{x:1,y:4},{x:2,y:4},{x:3,y:4.25},{x:3.5,y:5},{x:3.75,y:6},{x:3.8,y:7},{x:3.75,y:8},{x:3.5,y:9},{x:2,y:10},{x:3,y:9.75},{delX:10,delY:0}]
+        let dots_A = [{x:1,y:10},{x:1.5,y:9},{x:2,y:8},{x:2.5,y:7},{x:3,y:6},{x:3.5,y:5},{x:4,y:4},{x:4.5,y:4},{x:5,y:5},{x:5.5,y:6},{x:6,y:7},{x:6.5,y:8},{x:7,y:9},{x:7.5,y:10},{x:2.9,y:8},{x:3.8,y:8},{x:4.7,y:8},{x:5.6,y:8},{delX:8,delY:0}]
+        let dots_B = [{x:1,y:10},{x:1,y:9},{x:1,y:8},{x:1,y:7},{x:1,y:6},{x:1,y:5},{x:1,y:4},{x:2,y:4},{x:3,y:4},{x:3.5,y:5},{x:3.5,y:6},{x:2,y:7},{x:3,y:7},{x:3.5,y:8},{x:3.5,y:9},{x:2,y:10},{x:3,y:10},{x:3.5,y:8},{delX:4.25,delY:0}]
+        let dots_C = [{x:1,y:7},{x:1.25,y:6},{x:1.25,y:8},{x:1.75,y:5},{x:1.75,y:9},{x:2.5,y:4.25},{x:2.5,y:9.75},{x:3.5,y:4},{x:3.5,y:10},{x:4.5,y:4.2},{x:4.5,y:9.8},{delX:5.25,delY:0}]
+        let dots_D = [{x:1,y:10},{x:1,y:9},{x:1,y:8},{x:1,y:7},{x:1,y:6},{x:1,y:5},{x:1,y:4},{x:2,y:4},{x:3,y:4.25},{x:3.5,y:5},{x:3.75,y:6},{x:3.8,y:7},{x:3.75,y:8},{x:3.5,y:9},{x:2,y:10},{x:3,y:9.75},{delX:4,delY:0}]
         // Create a WebGL 2D platform on the canvas:
         function init(){
             timeText = document.getElementById('TimeText');
@@ -55,19 +55,21 @@
 
             var floHex = Stardust.mark.compile(`
                 mark Hex(
+                phrasePosX: float,
                 center: Vector2,
-                radius: float,
+                hexSize: float,
+                hexRot: float,
+                scaleX: float,
+                scaleY: float,
                 color: Color = [ 0, 0, 0, 1 ],
                 intTime: float
                 ) {
-                    let intRadius = radius * (0.75 + sin(0.5*intTime*PI)*sin(0.5*intTime*PI));
-                    let intRot = intTime;
-                    let movedCenter = Vector2(100 * sin(0.4*intTime * PI) + 10*intTime, 10 * cos(0.1*intTime * PI)+ 10*intTime) + center;
+                    let movedCenter = Vector2(phrasePosX + scaleX*center.x, scaleY*center.y);
                     for(i in 0..5) {
-                        let a1 = (i + intRot) / 6.0 * PI * 2.0;
-                        let a2 = (i + 1 + intRot) / 6.0 * PI * 2.0;
-                        let p1 = Vector2(intRadius * cos(a1), intRadius * sin(a1));
-                        let p2 = Vector2(intRadius * cos(a2), intRadius * sin(a2));
+                        let a1 = (i + hexRot) / 6.0 * PI * 2.0;
+                        let a2 = (i + 1 + hexRot) / 6.0 * PI * 2.0;
+                        let p1 = Vector2(hexSize * cos(a1), hexSize * sin(a1));
+                        let p2 = Vector2(hexSize * cos(a2), hexSize * sin(a2));
                         emit [
                             { position: movedCenter + p1, color: color },
                                 { position: movedCenter, color: color },
@@ -78,34 +80,39 @@
 
             marks = Stardust.mark.create(floHex.Hex, platform);
             marks.attr("center", (d) => [ d.x, d.y]);
-            marks.attr("radius", 5);
+            marks.attr("hexSize", 5);
+            marks.attr("hexRot", 0);
+            marks.attr("phrasePosX", 100.0);
+            marks.attr("scaleX", 15.0);
+            marks.attr("scaleY", 15.0);
             marks.attr("color", starDustColors[0]);
             marks.attr("intTime", 0);
             createBaseData();
         }
 
+        function pushChar(dots, pos){
+            let lenM1 = dots.length-1;
+            for (let i = 0; i < lenM1; i++) {
+                baseData.push({x:dots[i].x + pos.x, y:dots[i].y + pos.y});
+            }
+            pos.x += dots[lenM1].delX;
+            pos.y += dots[lenM1].delY;
+        }
+
         // ... Load data and render your visualization
         function createBaseData(){
-            let curX = 100.0;
-            let curY = 300.0;
+            let startPosX = 1.0;
+            let startPosY = 1.0;
             let xOffset = 150;
             let yOffset = 0;
-            let scale = 15;
-            for (let j=0;j < 6;j+=4) {
-                for (let i = 0; i < dots_A.length-1; i++) {
-                    baseData.push({x:scale*dots_A[i].x + j * xOffset +curX, y:scale*dots_A[i].y + j * yOffset});
-                }
-                for (let i = 0; i < dots_B.length; i++) {
-                    baseData.push({x:scale*dots_B[i].x + (j+1) * xOffset +curX, y:scale*dots_B[i].y + (j+1) * yOffset});
-                }
-                for (let i = 0; i < dots_C.length; i++) {
-                    baseData.push({x:scale*dots_C[i].x + (j+2) * xOffset +curX, y:scale*dots_C[i].y + (j+2) * yOffset});
-                }
-                for (let i = 0; i < dots_D.length; i++) {
-                    baseData.push({x:scale*dots_D[i].x + (j+3) * xOffset +curX, y:scale*dots_D[i].y + (j+3) * yOffset});
-                }
-            }
-                    // console.log(data);
+            let scale = 1;
+            var curPos = {x:startPosX, y:startPosY};
+
+            pushChar(dots_B, curPos);
+            pushChar(dots_D, curPos);
+            pushChar(dots_A, curPos);
+            pushChar(dots_B, curPos);
+            pushChar(dots_C, curPos);
             dataL = baseData.length;
             console.log("Nr of datapoints: ", dataL);
             dataPntsText.innerHTML = "Nr of data points: " + dataL.toString();
@@ -126,6 +133,10 @@
             var p = window.performance;
             var t0 = p.now();
             marks.attr("intTime", myTime);
+            // marks.attr("scaleY", myTime*2);
+            // marks.attr("scaleX", myTime*10);
+            marks.attr("hexRot", myTime*2);
+            marks.attr("phrasePosX", myTime*myTime*30);
             marks.render();
             var t1 = p.now();
             dT = t1 - t0;
@@ -140,7 +151,7 @@
             myTimePrev = myTimeNow;
             myTimeNow = Date.now();
             myTimeDel = (myTimeNow - myTimePrev)*0.001; //in sec
-            if (myTimeDel > 0.019){
+            if (myTimeDel > 0.0185){
                 console.log("in updateMyTime: " , myFrameCount, ": ", myTimeDel);
             }
             myTime += myTimeDel;	// in sec
@@ -151,8 +162,9 @@
             if (myTime < 4){
                 // updateRays();
                 // updateRaysTimed();
+                //
                 renderTimed();
-               requestAnimationFrame( animate );
+                requestAnimationFrame( animate );
             }
         }
     </script>
